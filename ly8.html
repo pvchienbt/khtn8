@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiểm tra KHTN 8 - 3 Phút</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .progress-bar { transition: width 1s linear; }
+        .option-card:hover:not(.disabled) { transform: translateX(5px); }
+        .math { font-style: italic; font-weight: 600; color: #1e40af; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <div id="app" class="max-w-2xl mx-auto p-4 sm:p-8">
+        <!-- Màn hình bắt đầu -->
+        <div id="start-screen" class="bg-white rounded-[2.5rem] shadow-2xl p-8 text-center mt-10 border border-slate-100">
+            <div class="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg rotate-3">
+                <i class="fas fa-stopwatch text-white text-4xl"></i>
+            </div>
+            <h1 class="text-4xl font-black text-slate-800 mb-2">KHTN 8</h1>
+            <p class="text-slate-500 mb-8 font-medium">Chủ đề: Lực đẩy Archimedes & Tác dụng làm quay</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-10 text-left">
+                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                    <span class="block text-[10px] font-bold text-blue-400 uppercase">Số câu hỏi</span>
+                    <span class="text-xl font-black text-blue-700">10 Câu</span>
+                </div>
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                    <span class="block text-[10px] font-bold text-amber-400 uppercase">Thời gian</span>
+                    <span class="text-xl font-black text-amber-700">03:00</span>
+                </div>
+            </div>
+
+            <button onclick="quizApp.start()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-blue-100 text-lg active:scale-95">
+                BẮT ĐẦU LÀM BÀI
+            </button>
+        </div>
+
+        <!-- Màn hình Quiz -->
+        <div id="quiz-screen" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <span id="question-counter" class="text-xs font-black text-blue-600 uppercase tracking-widest">Câu 1 / 10</span>
+                </div>
+                <div id="timer-display" class="bg-white px-5 py-2 rounded-full shadow-sm border border-slate-200 font-black text-red-500 flex items-center gap-2">
+                    <i class="fas fa-clock"></i> 03:00
+                </div>
+            </div>
+
+            <div class="h-2 bg-white rounded-full overflow-hidden shadow-inner mb-8">
+                <div id="timer-progress" class="h-full bg-blue-500 progress-bar" style="width: 100%"></div>
+            </div>
+
+            <div class="bg-white rounded-[2.5rem] shadow-xl p-8 border border-white mb-6">
+                <h2 id="question-text" class="text-xl sm:text-2xl font-black text-slate-800 leading-tight mb-8"></h2>
+                
+                <div id="options-container" class="space-y-3">
+                    <!-- Options injected here -->
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button id="next-btn" onclick="quizApp.nextQuestion()" class="hidden px-10 py-4 bg-slate-800 text-white font-black rounded-2xl shadow-xl hover:bg-slate-900 transition-all flex items-center gap-2">
+                    CÂU TIẾP THEO <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Màn hình kết quả -->
+        <div id="result-screen" class="hidden bg-white rounded-[2.5rem] shadow-2xl p-10 text-center mt-10 border border-slate-100">
+            <i class="fas fa-trophy text-yellow-500 text-6xl mb-6"></i>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">Kết quả bài làm</h2>
+            <p id="result-message" class="text-slate-500 mb-8"></p>
+            
+            <div class="text-6xl font-black text-blue-600 mb-10" id="final-score">0/10</div>
+
+            <button onclick="location.reload()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-blue-700 transition-all">
+                LÀM BỘ ĐỀ MỚI
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const QUESTION_BANK = [
+            // CÁC CÂU TỪ FILE ĐỀ CƯƠNG (BẮT BUỘC)
+            {
+                q: "Công thức tính lực đẩy Archimedes là:",
+                options: ["$F_A = d . V$", "$F_A = D . V$", "$F_A = P_{Vật}$", "$F_A = d . h$"],
+                correct: 0,
+                rationale: "Công thức chuẩn là tích của trọng lượng riêng chất lỏng (d) và thể tích phần chìm (V)."
+            },
+            {
+                q: "Tại sao trong ống nhỏ giọt bịt kín đầu trên thì nước không chảy ra?",
+                options: ["Do áp suất khí quyển tác dụng từ dưới lên lớn hơn trọng lượng cột nước", "Do nước quá nhẹ", "Do ống có đường kính bé", "Do sức căng mặt ngoài"],
+                correct: 0,
+                rationale: "Áp suất khí quyển tác dụng lên miệng ống tạo ra áp lực đẩy cột nước lên."
+            },
+            {
+                q: "Tại sao miếng gỗ thả vào nước thì nổi?",
+                options: ["Vì trọng lượng riêng của gỗ nhỏ hơn trọng lượng riêng của nước", "Vì gỗ nhẹ", "Vì gỗ không thấm nước", "Vì gỗ to"],
+                correct: 0,
+                rationale: "Vật sẽ nổi khi trọng lượng riêng của vật nhỏ hơn trọng lượng riêng của chất lỏng."
+            },
+            {
+                q: "Tác dụng làm quay của lực càng lớn khi nào?",
+                options: ["Giá của lực càng xa trục quay, moment lực càng lớn", "Giá của lực càng gần trục quay", "Moment lực càng bé", "Lực càng nhỏ"],
+                correct: 0,
+                rationale: "Moment lực tỉ lệ thuận với cánh tay đòn (khoảng cách từ giá của lực đến trục quay)."
+            },
+            {
+                q: "Điền vào chỗ trống: Khi lực tác dụng vào vật có ... không song song và không cắt trục quay thì có thể làm quay vật.",
+                options: ["phương", "độ lớn", "chiều", "điểm đặt"],
+                correct: 0,
+                rationale: "Phương của lực không song song và không cắt trục quay là điều kiện cần để tạo ra Moment lực."
+            },
+            // CÁC CÂU BỔ SUNG TỪ NGÂN HÀNG TRƯỚC
+            {
+                q: "Đơn vị của Moment lực trong hệ SI là gì?",
+                options: ["$N . m$", "$N / m$", "$kg . m$", "Joule"],
+                correct: 0,
+                rationale: "Moment lực bằng tích của Lực (N) và Cánh tay đòn (m)."
+            },
+            {
+                q: "Lực đẩy Archimedes phụ thuộc vào những yếu tố nào?",
+                options: ["Trọng lượng riêng chất lỏng và thể tích phần chìm", "Khối lượng vật", "Độ sâu của vật", "Hình dạng vật"],
+                correct: 0,
+                rationale: "Theo công thức $F_A = d . V$, chỉ phụ thuộc d (chất lỏng) và V (phần chiếm chỗ)."
+            },
+            {
+                q: "Khi một vật lơ lửng trong chất lỏng, ta có điều kiện gì?",
+                options: ["$F_A = P$", "$F_A > P$", "$F_A < P$", "$F_A = 0$"],
+                correct: 0,
+                rationale: "Trạng thái cân bằng (lơ lửng) xảy ra khi lực đẩy hướng lên bằng trọng lượng hướng xuống."
+            },
+            {
+                q: "Cánh tay đòn của lực là gì?",
+                options: ["Khoảng cách vuông góc từ trục quay đến giá của lực", "Khoảng cách từ điểm đặt đến trục quay", "Chiều dài của vật quay", "Chiều dài tay cầm"],
+                correct: 0,
+                rationale: "Đó là đoạn thẳng vuông góc ngắn nhất từ trục tới đường thẳng chứa lực."
+            },
+            {
+                q: "Đại lượng nào đặc trưng cho tác dụng làm quay của lực?",
+                options: ["Moment lực", "Trọng lượng", "Áp suất", "Vận tốc"],
+                correct: 0,
+                rationale: "Moment lực là đại lượng vật lý đặc trưng cho khả năng làm quay vật quanh trục."
+            }
+        ];
+
+        const quizApp = {
+            currentIdx: 0,
+            score: 0,
+            timeRemaining: 180,
+            timerInterval: null,
+            questions: [],
+
+            start() {
+                // Xáo trộn ngân hàng và lấy 10 câu
+                this.questions = [...QUESTION_BANK].sort(() => Math.random() - 0.5).slice(0, 10);
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('quiz-screen').classList.remove('hidden');
+                this.showQuestion();
+                this.startTimer();
+            },
+
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    this.timeRemaining--;
+                    this.updateTimerDisplay();
+                    if (this.timeRemaining <= 0) {
+                        this.finish();
+                    }
+                }, 1000);
+            },
+
+            updateTimerDisplay() {
+                const mins = Math.floor(this.timeRemaining / 60);
+                const secs = this.timeRemaining % 60;
+                const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                document.getElementById('timer-display').innerText = timeStr;
+                
+                const percent = (this.timeRemaining / 180) * 100;
+                document.getElementById('timer-progress').style.width = percent + '%';
+                
+                if (this.timeRemaining <= 30) {
+                    document.getElementById('timer-display').classList.add('animate-pulse');
+                }
+            },
+
+            showQuestion() {
+                const q = this.questions[this.currentIdx];
+                document.getElementById('question-counter').innerText = `Câu ${this.currentIdx + 1} / 10`;
+                document.getElementById('question-text').innerHTML = this.formatMath(q.q);
+                
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+                document.getElementById('next-btn').classList.add('hidden');
+
+                q.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-card w-full text-left p-5 rounded-2xl border-2 border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 transition-all font-medium text-slate-700 flex justify-between items-center';
+                    btn.innerHTML = `<span>${this.formatMath(opt)}</span>`;
+                    btn.onclick = () => this.handleAnswer(idx, btn);
+                    container.appendChild(btn);
+                });
+            },
+
+            handleAnswer(idx, btn) {
+                const q = this.questions[this.currentIdx];
+                const buttons = document.querySelectorAll('.option-card');
+                
+                buttons.forEach(b => b.classList.add('disabled', 'pointer-events-none', 'opacity-50'));
+                
+                if (idx === q.correct) {
+                    this.score++;
+                    btn.classList.replace('border-slate-100', 'border-green-500');
+                    btn.classList.replace('bg-slate-50', 'bg-green-50');
+                    btn.classList.add('text-green-700', 'opacity-100');
+                    btn.innerHTML += '<i class="fas fa-check-circle text-green-600"></i>';
+                } else {
+                    btn.classList.replace('border-slate-100', 'border-red-500');
+                    btn.classList.replace('bg-slate-50', 'bg-red-50');
+                    btn.classList.add('text-red-700', 'opacity-100');
+                    btn.innerHTML += '<i class="fas fa-times-circle text-red-600"></i>';
+                    
+                    // Show correct answer
+                    buttons[q.correct].classList.replace('border-slate-100', 'border-green-500');
+                    buttons[q.correct].classList.replace('bg-slate-50', 'bg-green-50');
+                    buttons[q.correct].classList.add('opacity-100');
+                }
+
+                document.getElementById('next-btn').classList.remove('hidden');
+            },
+
+            nextQuestion() {
+                this.currentIdx++;
+                if (this.currentIdx < 10) {
+                    this.showQuestion();
+                } else {
+                    this.finish();
+                }
+            },
+
+            finish() {
+                clearInterval(this.timerInterval);
+                document.getElementById('quiz-screen').classList.add('hidden');
+                document.getElementById('result-screen').classList.remove('hidden');
+                document.getElementById('final-score').innerText = `${this.score} / 10`;
+                
+                const msg = this.score >= 8 ? "Xuất sắc! Bạn nắm rất vững kiến thức." : 
+                            this.score >= 5 ? "Khá tốt. Hãy ôn tập thêm những câu sai nhé." :
+                            "Bạn cần cố gắng hơn. Đọc lại bài 17 và 18 nhé!";
+                document.getElementById('result-message').innerText = msg;
+            },
+
+            formatMath(text) {
+                return text.replace(/\$(.*?)\$/g, '<span class="math">$1</span>');
+            }
+        };
+    </script>
+</body>
+</html>
